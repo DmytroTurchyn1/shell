@@ -28,7 +28,7 @@ int main() {
     }else if(strncmp(input + 5, "exit", 4) == 0){
       printf("exit is a shell builtin\n");
     }else{
-      printf("%s: command not found\n", input + 5);
+      printf("%s: not found\n", input + 5);
     }
 
   }else{
