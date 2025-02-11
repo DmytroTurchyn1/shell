@@ -13,7 +13,11 @@ int main() {
   char input[100];
   fgets(input, 100, stdin);
   input[strcspn(input, "\n")] = '\0';
+  if(strstr(input, "exit 0") != NULL){
+    break;
+  }
   printf("%s: command not found\n", input);
+
   }
   return 0;
 }
