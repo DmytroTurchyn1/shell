@@ -3,15 +3,16 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
-
+char *find_in_path(const char *command);
 void fork_and_exec_cmd(char *full_path, int argc, char **argv);
+int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
 int main() {
-  locate("echo");
   // Flush after every printf
   setbuf(stdout, NULL);
-  //system("clear");
+  system("clear");
 
   // Uncomment this block to pass the first stage
   while (1) {
@@ -46,7 +47,7 @@ int main() {
     }
 
   }else{
-      char *argv[10];
+    char *argv[10];
       int argc = 0;
       char *token = strtok(input, " ");
       while (token != NULL && argc < 10) {
@@ -66,20 +67,26 @@ int main() {
   return 0;
 }
 
-char* string_tokenizer(char *input){
-    char *argv[10];
-    int argc = 0;
-    char *token = strtok(input, " ");
-    char tokens[5][10];
-    for (int i;token != NULL; i++){
-        argv[argc++] = token;
-        token = strtok(NULL, " ");
-    }
-    argv[argc] = NULL;
-    char *cmd_path = find_in_path(argv[0]);
-    return &cmd_path;
-}
 
+
+char *find_in_path(const char *command) {
+  char *path_env = getenv("PATH");
+  if (path_env == NULL)
+    return NULL;
+    char *path_copy = strdup(path_env);
+    char *dir = strtok(path_copy, ":");
+    static char full_path[1024];
+    while (dir != NULL) {
+      snprintf(full_path, sizeof(full_path), "%s/%s", dir, command);
+      if (is_executable(full_path)) {
+        free(path_copy);
+        return full_path;
+      }
+      dir = strtok(NULL, ":");
+    }
+    free(path_copy);
+    return NULL;
+  }
 
 void fork_and_exec_cmd(char *full_path, int argc, char **argv) {
   pid_t pid = fork();
