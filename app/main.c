@@ -6,6 +6,7 @@ int main() {
   setbuf(stdout, NULL);
 
   // Uncomment this block to pass the first stage
+  while (1) {
    printf("$ ");
 
   // Wait for user input
@@ -13,6 +14,6 @@ int main() {
   fgets(input, 100, stdin);
   input[strcspn(input, "\n")] = '\0';
   printf("%s: command not found\n", input);
-  
+  }
   return 0;
 }
