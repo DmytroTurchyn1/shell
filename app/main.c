@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include <string.h>
 
 int main() {
@@ -16,8 +17,11 @@ int main() {
   if(strstr(input, "exit 0") != NULL){
     break;
   }
+  if(strncmp(input, "echo", 4) == 0){
+    printf("%s\n", input + 5);
+  }else{
   printf("%s: command not found\n", input);
-
+  }
   }
   return 0;
 }
