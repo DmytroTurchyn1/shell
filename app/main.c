@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+
+void fork_and_exec_cmd(char *full_path, int argc, char **argv);
 
 int main() {
-  FILE *fp;
-  char path[128];
+  locate("echo");
   // Flush after every printf
   setbuf(stdout, NULL);
-  system("clear");
+  //system("clear");
 
   // Uncomment this block to pass the first stage
   while (1) {
@@ -42,10 +46,51 @@ int main() {
     }
 
   }else{
-  printf("%s: command not found\n", input);
+      char *argv[10];
+      int argc = 0;
+      char *token = strtok(input, " ");
+      while (token != NULL && argc < 10) {
+        argv[argc++] = token;
+        token = strtok(NULL, " ");
+      }
+      argv[argc] = NULL;
+      char *cmd_path = find_in_path(argv[0]);
+      if (cmd_path) {
+        fork_and_exec_cmd(cmd_path, argc, argv);
+      } else
+        printf("%s: command not found\n", argv[0]);
   }
 
   }
 
   return 0;
+}
+
+char* string_tokenizer(char *input){
+    char *argv[10];
+    int argc = 0;
+    char *token = strtok(input, " ");
+    char tokens[5][10];
+    for (int i;token != NULL; i++){
+        argv[argc++] = token;
+        token = strtok(NULL, " ");
+    }
+    argv[argc] = NULL;
+    char *cmd_path = find_in_path(argv[0]);
+    return &cmd_path;
+}
+
+
+void fork_and_exec_cmd(char *full_path, int argc, char **argv) {
+  pid_t pid = fork();
+  if (pid == 0) {
+    execv(full_path, argv);
+    perror("execv");
+    exit(1);
+  } else if (pid < 0)
+    perror("fork");
+  else {
+    int status;
+    waitpid(pid, &status, 0);
+  }
 }
