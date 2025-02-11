@@ -3,6 +3,8 @@
 #include <string.h>
 
 int main() {
+  FILE *fp;
+  char path[128];
   // Flush after every printf
   setbuf(stdout, NULL);
   system("clear");
@@ -28,7 +30,15 @@ int main() {
     }else if(strncmp(input + 5, "exit", 4) == 0){
       printf("exit is a shell builtin\n");
     }else{
-      printf("%s: not found\n", input + 5);
+      char command[256];
+      sprintf(command, "which %s > /dev/null 2>&1", input + 5);
+      if(system(command) == 0){
+          printf("%s is ",input + 5);
+          sprintf(command, "which %s", input + 5);
+          system(command);
+      }else{
+        printf("%s: not found\n", input + 5);
+      }
     }
 
   }else{
@@ -36,5 +46,6 @@ int main() {
   }
 
   }
+
   return 0;
 }
