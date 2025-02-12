@@ -10,26 +10,15 @@ typedef void (*builtin_func_t)();
 // Structure to map builtin commands to functions
 typedef struct {
   const char *name;
-  builtin_func_t func;
+  const char *text;
 } builtin_map;
-
-// Define the builtin functions
-void type_pwd(){printf("pwd is a shell builtin\n");}
-
-void type_exit(){printf("exit is a shell builtin\n");}
-
-void type_echo(){printf("echo is a shell builtin\n");}
-
-void type_cd(){printf("cd is a shell builtin\n");}
-
-void type_type(){printf("type is a shell builtin\n");}
 
 // Create the mapping table
 builtin_map builtins[] = {
-  {"echo", type_echo},
-  {"type", type_type},
-  {"exit", type_exit},
-  {"pwd",  type_pwd}
+  {"echo", "echo is a shell builtin\n"},
+  {"type", "type is a shell builtin\n"},
+  {"exit", "exit is a shell builtin\n"},
+  {"pwd",  "pwd is a shell builtin\n"}
 };
 
 #define NUM_BUILTINS (sizeof(builtins)/sizeof(builtins[0]))
@@ -116,7 +105,7 @@ void handle_type_builtin(char *input) {
   for (size_t i = 0; i < NUM_BUILTINS; i++) {
       // Compare using strcmp to the length of the command string stored in the table
       if (strncmp(cmd, builtins[i].name, strlen(builtins[i].name)) == 0) {
-          builtins[i].func();
+          printf("%s",builtins[i].text);
           return;
       }
   }
@@ -141,7 +130,7 @@ int main() {
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = '\0';
   
-  //check user input
+  //Check user input
     if(strstr(input, "exit 0") != NULL)
       break;
     else if(strncmp(input, "echo", 4) == 0)
