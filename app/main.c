@@ -33,7 +33,7 @@ builtin_map builtins[] = {
 };
 
 #define NUM_BUILTINS (sizeof(builtins)/sizeof(builtins[0]))
-
+// Define the program functions
 int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
 char *find_in_path(const char *command) {
@@ -131,33 +131,30 @@ int main() {
   // Flush after every printf
   setbuf(stdout, NULL);
   system("clear");
-  // Uncomment this block to pass the first stage
+
+
   while (1) {
-   printf("$ ");
+    printf("$ ");
 
-  // Wait for user input
-  char input[100];
-  fgets(input, 100, stdin);
-  input[strcspn(input, "\n")] = '\0';
-
-  if(strstr(input, "exit 0") != NULL){
-    break;
-  }else if(strncmp(input, "echo", 4) == 0){
-    echo_command(input);
-  }else if(strncmp(input, "type", 4) == 0){
-
-    handle_type_builtin(input);
+  // Wait for user input and delete newline character
+    char input[100];
+    fgets(input, 100, stdin);
+    input[strcspn(input, "\n")] = '\0';
+  
+  //check user input
+    if(strstr(input, "exit 0") != NULL)
+      break;
+    else if(strncmp(input, "echo", 4) == 0)
+      echo_command(input);
+    else if(strncmp(input, "type", 4) == 0)
+      handle_type_builtin(input);
+    else if(strncmp(input, "pwd", 4) == 0)
+      system("pwd");
+    else if(strncmp(input, "cd", 2) == 0)
+      cd_command(input);
+    else
+      run_program(input);
     
-  }else if(strncmp(input, "pwd", 4) == 0){
-
-    system("pwd");
-
-  }else if(strncmp(input, "cd", 2) == 0){
-    cd_command(input);
-
-  }else{
-    run_program(input);
-  }
 
   }
 
