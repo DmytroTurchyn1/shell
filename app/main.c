@@ -34,6 +34,8 @@ int main() {
       printf("type is a shell builtin\n");
     }else if(strncmp(input + 5, "exit", 4) == 0){
       printf("exit is a shell builtin\n");
+    }else if(strncmp(input + 5, "pwd", 4) == 0){
+      printf("pwd is a shell builtin\n");
     }else{
       char command[256];
       sprintf(command, "which %s > /dev/null 2>&1", input + 5);
