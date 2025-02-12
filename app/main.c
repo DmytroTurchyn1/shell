@@ -21,7 +21,7 @@ builtin_map builtins[] = {
   {"pwd",  "pwd is a shell builtin\n"}
 };
 
-#define NUM_BUILTINS (sizeof(builtins)/sizeof(builtins[0]))
+
 // Define the program functions
 int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
@@ -99,7 +99,7 @@ void run_program(char *input) {
     printf("%s: command not found\n", argv[0]);
 }
 
-void handle_type_builtin(char *input) {
+void handle_type_builtin(char *input, const int NUM_BUILTINS) {
   char *cmd = input + 5;
   // Loop through builtins table
   for (size_t i = 0; i < NUM_BUILTINS; i++) {
@@ -117,6 +117,7 @@ void handle_type_builtin(char *input) {
 
 
 int main() {
+  const int NUM_BUILTINS = (sizeof(builtins)/sizeof(builtins[0]));
   // Flush after every printf
   setbuf(stdout, NULL);
   system("clear");
@@ -136,7 +137,7 @@ int main() {
     else if(strncmp(input, "echo", 4) == 0)
       echo_command(input);
     else if(strncmp(input, "type", 4) == 0)
-      handle_type_builtin(input);
+      handle_type_builtin(input, NUM_BUILTINS);
     else if(strncmp(input, "pwd", 4) == 0)
       system("pwd");
     else if(strncmp(input, "cd", 2) == 0)
