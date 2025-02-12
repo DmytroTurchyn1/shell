@@ -5,6 +5,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+
+typedef void (*builtin_func_t)();
+// Structure to map builtin commands to functions
+typedef struct {
+  const char *name;
+  builtin_func_t func;
+} builtin_map;
+
+// Define the builtin functions
 void type_pwd(){printf("pwd is a shell builtin\n");}
 
 void type_exit(){printf("exit is a shell builtin\n");}
@@ -14,6 +23,16 @@ void type_echo(){printf("echo is a shell builtin\n");}
 void type_cd(){printf("cd is a shell builtin\n");}
 
 void type_type(){printf("type is a shell builtin\n");}
+
+// Create the mapping table
+builtin_map builtins[] = {
+  {"echo", type_echo},
+  {"type", type_type},
+  {"exit", type_exit},
+  {"pwd",  type_pwd}
+};
+
+#define NUM_BUILTINS (sizeof(builtins)/sizeof(builtins[0]))
 
 int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
@@ -91,12 +110,27 @@ void run_program(char *input) {
     printf("%s: command not found\n", argv[0]);
 }
 
+void handle_type_builtin(char *input) {
+  char *cmd = input + 5;
+  // Loop through builtins table
+  for (size_t i = 0; i < NUM_BUILTINS; i++) {
+      // Compare using strcmp to the length of the command string stored in the table
+      if (strncmp(cmd, builtins[i].name, strlen(builtins[i].name)) == 0) {
+          builtins[i].func();
+          return;
+      }
+  }
+  // If no builtin matched, run the type_command function
+  type_command(input);
+}
+
+
+
 
 int main() {
   // Flush after every printf
   setbuf(stdout, NULL);
   system("clear");
-  char commands[10][10] = {"echo", "type", "pwd", "cd", "exit"};
   // Uncomment this block to pass the first stage
   while (1) {
    printf("$ ");
@@ -112,18 +146,8 @@ int main() {
     echo_command(input);
   }else if(strncmp(input, "type", 4) == 0){
 
-    if (strncmp(input + 5, "echo", 4) == 0)
-      type_echo();
-    else if(strncmp(input + 5, "type", 4) == 0)
-      type_type(); 
-    else if(strncmp(input + 5, "exit", 4) == 0)
-      type_exit();
-    else if(strncmp(input + 5, "pwd", 4) == 0)
-      type_pwd();
-    else
-      type_command(input);
+    handle_type_builtin(input);
     
-
   }else if(strncmp(input, "pwd", 4) == 0){
 
     system("pwd");
