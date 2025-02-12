@@ -46,6 +46,8 @@ int main() {
       }
     }
 
+  }else if(strncmp(input, "pwd", 4) == 0){
+    system("pwd");
   }else{
     char *argv[10];
       int argc = 0;
