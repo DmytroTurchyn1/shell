@@ -51,8 +51,13 @@ int main() {
   }else if(strncmp(input, "pwd", 4) == 0){
     system("pwd");
   }else if(strncmp(input, "cd", 2) == 0){
-    if (chdir(input + 3) < 0)
-      printf("cd: %s: No such file or directory\n", input + 3);
+    char *path = input + 2;
+    while(*path == ' ') path++;
+    if (strncmp(path, "~", 1) == 0)
+      chdir(getenv("HOME"));
+    else if (chdir(input + 3) < 0)
+      printf("cd: %s : No such file or directory\n", input + 3);
+
   }else{
     char *argv[10];
       int argc = 0;
