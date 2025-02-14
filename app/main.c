@@ -85,27 +85,48 @@ void echo_command(char *input){
 }
 
 void run_program(char *input) {
-  char *argv[100];
-  int argc = 0;
-  if(strncmp(input, "ls", 2) == 0 || strncmp(input, "pwd", 3) == 0 || strncmp(input, "cat", 3) == 0){
-    char *token = strtok(input, ">");
-    while (token != NULL && argc < 10) {
-      argv[argc++] = token;
-      token = strtok(NULL, ">");
-    }
-  }else{
+    char *argv[100];
+    int argc = 0;
+    char *out_file = NULL;
+
+    // Tokenize always by space
     char *token = strtok(input, " ");
-    while (token != NULL && argc < 10) {
-      argv[argc++] = token;
-      token = strtok(NULL, " ");
+    while (token != NULL && argc < 99) {
+        if (strcmp(token, ">") == 0) {
+            // Next token should be the output file
+            out_file = strtok(NULL, " ");
+        } else {
+            argv[argc++] = token;
+        }
+        token = strtok(NULL, " ");
     }
-  }
-  argv[argc] = NULL;
-  char *cmd_path = find_in_path(argv[0]);
-  if (cmd_path) {
-    fork_and_exec_cmd(cmd_path, argc, argv);
-  } else
-    printf("%s: command not found\n", argv[0]);
+    argv[argc] = NULL;
+    
+    // Find the command in PATH using the first argument only
+    char *cmd_path = find_in_path(argv[0]);
+    if (cmd_path) {
+      pid_t pid = fork();
+      if (pid == 0) {
+        // If an output file was specified, redirect stdout there.
+        if (out_file) {
+          FILE *fp = freopen(out_file, "w", stdout);
+          if (!fp) {
+              perror("freopen");
+              exit(1);
+          }
+        }
+        execv(cmd_path, argv);
+        perror("execv");
+        exit(1);
+      } else if (pid < 0) {
+          perror("fork");
+      } else {
+        int status;
+        waitpid(pid, &status, 0);
+      }
+    } else {
+      printf("%s: command not found\n", argv[0]);
+    }
 }
 
 void handle_type_builtin(char *input, const int NUM_BUILTINS) {
