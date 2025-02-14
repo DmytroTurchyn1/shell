@@ -69,6 +69,26 @@ char *find_in_path(const char *command) {
     return NULL;
   }
 
+char * removeSpacesFromStr(char *string)
+  {
+    int i = 0, j = 0;
+    
+    while (string[i] != '\0') {
+        // Copy non-space characters
+        if (string[i] != ' ') {
+            string[j++] = string[i++];
+        } else {
+            // If a space is found, insert one and skip any additional spaces.
+            string[j++] = ' ';
+            while (string[i] == ' ')
+                i++;
+        }
+    }
+    
+    string[j] = '\0';
+    return string;
+  }
+
 void fork_and_exec_cmd(char *full_path, int argc, char **argv) {
   pid_t pid = fork();
   if (pid == 0) {
@@ -107,8 +127,9 @@ void cd_command(char *input){
 
 void echo_command(char *input){
   input = quotes_handle(input);
+  
   if(strncmp(input, "echo", 4) == 0)
-    printf("%s\n", input + 5);
+    printf("%s\n", removeSpacesFromStr(input+5));
   else
     printf("%s\n", input);
   
@@ -152,7 +173,7 @@ int main() {
   const int NUM_BUILTINS = (sizeof(builtins)/sizeof(builtins[0]));
   // Flush after every printf
   setbuf(stdout, NULL);
-  system("clear");
+  //system("clear");
 
 
   while (1) {
