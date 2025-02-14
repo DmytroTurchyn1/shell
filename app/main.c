@@ -26,17 +26,29 @@ builtin_map builtins[] = {
 int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
 char *quotes_handle(char *input) {
-  int i = 0, j = 0;
+  int i = 0, j = 0, in_quotes = 0;
+  char quote_char = '\0';
     while (input[i] != '\0') {
-        if (input[i] == ' ') {
-            // Copy one space and skip extra spaces.
+        // If not in quotes, check for quote start.
+        if (!in_quotes && (input[i] == '"' || input[i] == '\'')) {
+            in_quotes = 1;
+            quote_char = input[i];
+            i++; // Skip the opening quote.
+        }
+        // If in quotes and we find the matching quote.
+        else if (in_quotes && input[i] == quote_char) {
+            in_quotes = 0;
+            quote_char = '\0';
+            i++; // Skip the closing quote.
+        }
+        // If outside quotes and we encounter spaces, compress them.
+        else if (!in_quotes && input[i] == ' ') {
             input[j++] = ' ';
             while (input[i] == ' ')
                 i++;
-        } else if (input[i] == '"' || input[i] == '\'') {
-            // Skip the quote characters.
-            i++;
-        } else {
+        }
+        // Otherwise, just copy the character.
+        else {
             input[j++] = input[i++];
         }
     }
@@ -120,7 +132,6 @@ void cd_command(char *input){
 
 void echo_command(char *input){
   input = quotes_handle(input+5);
-  
   if(strncmp(input, "echo", 4) == 0)
     printf("%s\n", removeSpacesFromStr(input+5));
   else
