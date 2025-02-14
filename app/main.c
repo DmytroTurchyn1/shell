@@ -26,28 +26,22 @@ builtin_map builtins[] = {
 int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
 char *quotes_handle(char *input) {
-  char *dstart = strchr(input, '"');
-  char *sstart = strchr(input, '\'');
-  char quote;
-  char *start;
-  char result;
-  if(!sstart && !dstart)
+  int i = 0, j = 0;
+    while (input[i] != '\0') {
+        if (input[i] == ' ') {
+            // Copy one space and skip extra spaces.
+            input[j++] = ' ';
+            while (input[i] == ' ')
+                i++;
+        } else if (input[i] == '"' || input[i] == '\'') {
+            // Skip the quote characters.
+            i++;
+        } else {
+            input[j++] = input[i++];
+        }
+    }
+    input[j] = '\0';
     return input;
-  if(dstart && (!sstart || dstart < sstart)){
-    quote = '"';
-    start = dstart;
-  }else if(sstart && (!dstart || sstart < dstart)){
-    quote = '\'';
-    start = sstart;
-  }else{
-    return input;
-  }
-  start++;
-  char *end = strchr(start, quote);
-  if (end)
-      *end = '\0';
-  return start;
-  
 }
 
 char *find_in_path(const char *command) {
@@ -69,29 +63,24 @@ char *find_in_path(const char *command) {
     return NULL;
   }
 
-char * removeSpacesFromStr(char *string)
-  {
-    int i = 0, j = 0;
+char *removeSpacesFromStr(char *string) {
+  int i = 0, j = 0;
     
-    while (string[i] != '\0') {
-        // Copy non-space characters
-        if (string[i] != '"') {
-            string[j++] = string[i++];
-        } else if (string[i] != '\'')
-        {
-            string[j++] = string[i++];
-        }
-        else {
-            // If a space is found, insert one and skip any additional spaces.
-            string[j++] = ' ';
-            while (string[i] == ' ')
-                i++;
-        }
-    }
-    
-    string[j] = '\0';
-    return string;
+  while (string[i] != '\0') {
+      // Copy non-space characters
+      if (string[i] != ' ') {
+          string[j++] = string[i++];
+      } else {
+          // If a space is found, insert one and skip any additional spaces.
+          string[j++] = ' ';
+          while (string[i] == ' ')
+              i++;
+      }
   }
+  
+  string[j] = '\0';
+  return string;
+}
 
 void fork_and_exec_cmd(char *full_path, int argc, char **argv) {
   pid_t pid = fork();
@@ -130,7 +119,7 @@ void cd_command(char *input){
 }
 
 void echo_command(char *input){
-  input = removeSpacesFromStr(input+5);
+  input = quotes_handle(input+5);
   
   if(strncmp(input, "echo", 4) == 0)
     printf("%s\n", removeSpacesFromStr(input+5));
