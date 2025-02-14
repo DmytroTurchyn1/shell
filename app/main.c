@@ -152,7 +152,7 @@ int main() {
     else if(strncmp(input, "cd", 2) == 0)
       cd_command(input);
     else
-      printf("run program function called\n");
+      //printf("run program function called\n");
       run_program(input);
     
 
