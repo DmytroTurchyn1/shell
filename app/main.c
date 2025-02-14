@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <ctype.h>
 
 
 typedef void (*builtin_func_t)();
@@ -139,16 +140,54 @@ void echo_command(char *input){
   
 }
 
+char **parse_input(const char *input, int *argc) {
+    int capacity = 10;
+    int count = 0;
+    char **tokens = malloc((capacity + 1) * sizeof(char *));
+    int i = 0;
+    int len = strlen(input);
+    
+    while (i < len) {
+        // Skip any leading whitespace.
+        while (i < len && isspace(input[i]))
+            i++;
+        if (i >= len)
+            break;
+        
+        char token[1024];
+        int j = 0;
+        
+        // If token begins with a quote, parse until closing quote.
+        if (input[i] == '"' || input[i] == '\'') {
+            char quote = input[i++];
+            while (i < len && input[i] != quote) {
+                token[j++] = input[i++];
+            }
+            if (i < len && input[i] == quote)
+                i++; // Skip closing quote.
+        } else {
+            // Otherwise, parse until next whitespace.
+            while (i < len && !isspace(input[i])) {
+                token[j++] = input[i++];
+            }
+        }
+        token[j] = '\0';
+        
+        tokens[count++] = strdup(token);
+        if (count >= capacity) {
+            capacity *= 2;
+            tokens = realloc(tokens, (capacity + 1) * sizeof(char *));
+        }
+    }
+    tokens[count] = NULL;
+    *argc = count;
+    return tokens;
+}
+
 void run_program(char *input) {
-  char *argv[100];
-  input = quotes_handle(input);
-  int argc = 0;
-    char *token = strtok(input, " ");
-    while (token != NULL && argc < 10) {
-      argv[argc++] = token;
-      token = strtok(NULL, " ");
-  }
-  argv[argc] = NULL;
+  char **argv;
+  int argc;
+  argv = parse_input(input, &argc);
   char *cmd_path = find_in_path(argv[0]);
   if (cmd_path) {
     fork_and_exec_cmd(cmd_path, argc, argv);
