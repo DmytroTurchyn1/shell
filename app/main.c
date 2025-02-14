@@ -72,6 +72,7 @@ void type_command(char *input){
 
 void cd_command(char *input){
   char *path = input + 2;
+
   while(*path == ' ') path++;
   if (strncmp(path, "~", 1) == 0)
     chdir(getenv("HOME"));
@@ -84,12 +85,20 @@ void echo_command(char *input){
 }
 
 void run_program(char *input) {
-  char *argv[10];
+  char *argv[100];
   int argc = 0;
-  char *token = strtok(input, " ");
-  while (token != NULL && argc < 10) {
-    argv[argc++] = token;
-    token = strtok(NULL, " ");
+  if(strncmp(input, "ls", 2) == 0 || strncmp(input, "pwd", 3) == 0 || strncmp(input, "cat", 3) == 0){
+    char *token = strtok(input, ">");
+    while (token != NULL && argc < 10) {
+      argv[argc++] = token;
+      token = strtok(NULL, ">");
+    }
+  }else{
+    char *token = strtok(input, " ");
+    while (token != NULL && argc < 10) {
+      argv[argc++] = token;
+      token = strtok(NULL, " ");
+    }
   }
   argv[argc] = NULL;
   char *cmd_path = find_in_path(argv[0]);
@@ -143,6 +152,7 @@ int main() {
     else if(strncmp(input, "cd", 2) == 0)
       cd_command(input);
     else
+      printf("run program function called\n");
       run_program(input);
     
 
