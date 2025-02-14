@@ -141,6 +141,7 @@ void echo_command(char *input){
 
 void run_program(char *input) {
   char *argv[100];
+  input = quotes_handle(input);
   int argc = 0;
     char *token = strtok(input, " ");
     while (token != NULL && argc < 10) {
