@@ -75,9 +75,13 @@ char * removeSpacesFromStr(char *string)
     
     while (string[i] != '\0') {
         // Copy non-space characters
-        if (string[i] != ' ') {
+        if (string[i] != '"') {
             string[j++] = string[i++];
-        } else {
+        } else if (string[i] != '\'')
+        {
+            string[j++] = string[i++];
+        }
+        else {
             // If a space is found, insert one and skip any additional spaces.
             string[j++] = ' ';
             while (string[i] == ' ')
@@ -126,7 +130,7 @@ void cd_command(char *input){
 }
 
 void echo_command(char *input){
-  input = quotes_handle(input);
+  input = removeSpacesFromStr(input+5);
   
   if(strncmp(input, "echo", 4) == 0)
     printf("%s\n", removeSpacesFromStr(input+5));
