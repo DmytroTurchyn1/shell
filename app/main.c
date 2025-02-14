@@ -25,6 +25,31 @@ builtin_map builtins[] = {
 // Define the program functions
 int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
+char *quotes_handle(char *input) {
+  char *dstart = strchr(input, '"');
+  char *sstart = strchr(input, '\'');
+  char quote;
+  char *start;
+  char result;
+  if(!sstart && !dstart)
+    return input;
+  if(dstart && (!sstart || dstart < sstart)){
+    quote = '"';
+    start = dstart;
+  }else if(sstart && (!dstart || sstart < dstart)){
+    quote = '\'';
+    start = sstart;
+  }else{
+    return input;
+  }
+  start++;
+  char *end = strchr(start, quote);
+  if (end)
+      *end = '\0';
+  return start;
+  
+}
+
 char *find_in_path(const char *command) {
   char *path_env = getenv("PATH");
   if (path_env == NULL)
@@ -81,52 +106,28 @@ void cd_command(char *input){
 }
 
 void echo_command(char *input){
-  printf("%s\n", input + 5);
+  input = quotes_handle(input);
+  if(strncmp(input, "echo", 4) == 0)
+    printf("%s\n", input + 5);
+  else
+    printf("%s\n", input);
+  
 }
 
 void run_program(char *input) {
-    char *argv[100];
-    int argc = 0;
-    char *out_file = NULL;
-
-    // Tokenize always by space
+  char *argv[100];
+  int argc = 0;
     char *token = strtok(input, " ");
-    while (token != NULL && argc < 99) {
-        if (strcmp(token, ">") == 0) {
-            // Next token should be the output file
-            out_file = strtok(NULL, " ");
-        } else {
-            argv[argc++] = token;
-        }
-        token = strtok(NULL, " ");
-    }
-    argv[argc] = NULL;
-    
-    // Find the command in PATH using the first argument only
-    char *cmd_path = find_in_path(argv[0]);
-    if (cmd_path) {
-      pid_t pid = fork();
-      if (pid == 0) {
-        // If an output file was specified, redirect stdout there.
-        if (out_file) {
-          FILE *fp = freopen(out_file, "w", stdout);
-          if (!fp) {
-              perror("freopen");
-              exit(1);
-          }
-        }
-        execv(cmd_path, argv);
-        perror("execv");
-        exit(1);
-      } else if (pid < 0) {
-          perror("fork");
-      } else {
-        int status;
-        waitpid(pid, &status, 0);
-      }
-    } else {
-      printf("%s: command not found\n", argv[0]);
-    }
+    while (token != NULL && argc < 10) {
+      argv[argc++] = token;
+      token = strtok(NULL, " ");
+  }
+  argv[argc] = NULL;
+  char *cmd_path = find_in_path(argv[0]);
+  if (cmd_path) {
+    fork_and_exec_cmd(cmd_path, argc, argv);
+  } else
+    printf("%s: command not found\n", argv[0]);
 }
 
 void handle_type_builtin(char *input, const int NUM_BUILTINS) {
@@ -147,6 +148,7 @@ void handle_type_builtin(char *input, const int NUM_BUILTINS) {
 
 
 int main() {
+  
   const int NUM_BUILTINS = (sizeof(builtins)/sizeof(builtins[0]));
   // Flush after every printf
   setbuf(stdout, NULL);
@@ -160,7 +162,7 @@ int main() {
     char input[100];
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = '\0';
-  
+    
   //Check user input
     if(strstr(input, "exit 0") != NULL)
       break;
@@ -173,7 +175,6 @@ int main() {
     else if(strncmp(input, "cd", 2) == 0)
       cd_command(input);
     else
-      //printf("run program function called\n");
       run_program(input);
     
 
