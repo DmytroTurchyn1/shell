@@ -131,59 +131,66 @@ void cd_command(char *input){
     printf("cd: %s: No such file or directory\n", input + 3);
 }
 
-void echo_command(char *input){
-  input = quotes_handle(input+5);
-  if(strncmp(input, "echo", 4) == 0)
-    printf("%s\n", removeSpacesFromStr(input+5));
-  else
-    printf("%s\n", input);
-  
+char **parse_input(const char *input, int *argc) {
+  int capacity = 10, count = 0;
+  char **tokens = malloc((capacity + 1) * sizeof(char *));
+  int i = 0, len = strlen(input);
+
+  while (i < len) {
+      // Skip leading whitespace.
+      while (i < len && isspace((unsigned char)input[i]))
+          i++;
+      if (i >= len)
+          break;
+
+      char token[1024];
+      int j = 0;
+
+      // If token starts with a quote, take everything until the matching quote.
+      if (input[i] == '"' || input[i] == '\'') {
+          char quote = input[i++];
+          while (i < len && input[i] != quote)
+              token[j++] = input[i++];
+          if (i < len && input[i] == quote)
+              i++; // Skip closing quote.
+      } else {
+          // Otherwise, build token until next whitespace.
+          while (i < len && !isspace((unsigned char)input[i])) {
+              if (input[i] == '\\' && i + 1 < len) {  // Handle backslash escape in unquoted tokens
+                  token[j++] = input[i + 1];
+                  i += 2;
+              } else {
+                  token[j++] = input[i++];
+              }
+          }
+      }
+      token[j] = '\0';
+      tokens[count++] = strdup(token);
+      if (count >= capacity) {
+          capacity *= 2;
+          tokens = realloc(tokens, (capacity + 1) * sizeof(char *));
+      }
+  }
+  tokens[count] = NULL;
+  *argc = count;
+  return tokens;
 }
 
-char **parse_input(const char *input, int *argc) {
-    int capacity = 10, count = 0;
-    char **tokens = malloc((capacity + 1) * sizeof(char *));
-    int i = 0, len = strlen(input);
+void echo_command(char *input) {
+  int argc;
+  char **argv = parse_input(input, &argc);
 
-    while (i < len) {
-        // Skip leading whitespace.
-        while (i < len && isspace((unsigned char)input[i]))
-            i++;
-        if (i >= len)
-            break;
+  // Print tokens[1]..tokens[argc-1] joined with a space.
+  for (int k = 1; k < argc; k++) {
+      printf("%s", argv[k]);
+      if (k < argc - 1)
+          printf(" ");
+  }
+  printf("\n");
 
-        char token[1024];
-        int j = 0;
-
-        // If token starts with a quote, take everything until the matching quote.
-        if (input[i] == '"' || input[i] == '\'') {
-            char quote = input[i++];
-            while (i < len && input[i] != quote)
-                token[j++] = input[i++];
-            if (i < len && input[i] == quote)
-                i++; // Skip closing quote.
-        } else {
-            // Otherwise, build token until next whitespace.
-            while (i < len && !isspace((unsigned char)input[i])) {
-                if (input[i] == '\\' && i + 1 < len) {  // Handle backslash escape
-                    token[j++] = input[i + 1];
-                    i += 2;
-                } else {
-                    token[j++] = input[i++];
-                }
-            }
-        }
-        token[j] = '\0';
-        tokens[count++] = strdup(token);
-
-        if (count >= capacity) {
-            capacity *= 2;
-            tokens = realloc(tokens, (capacity + 1) * sizeof(char *));
-        }
-    }
-    tokens[count] = NULL;
-    *argc = count;
-    return tokens;
+  for (int k = 0; k < argc; k++)
+      free(argv[k]);
+  free(argv);
 }
 
 void run_program(char *input) {
@@ -219,7 +226,7 @@ int main() {
   const int NUM_BUILTINS = (sizeof(builtins)/sizeof(builtins[0]));
   // Flush after every printf
   setbuf(stdout, NULL);
-  system("clear");
+  //system("clear");
 
 
   while (1) {
