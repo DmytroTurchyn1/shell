@@ -219,7 +219,7 @@ int main() {
   const int NUM_BUILTINS = (sizeof(builtins)/sizeof(builtins[0]));
   // Flush after every printf
   setbuf(stdout, NULL);
-  //system("clear");
+  system("clear");
 
 
   while (1) {
