@@ -141,39 +141,41 @@ void echo_command(char *input){
 }
 
 char **parse_input(const char *input, int *argc) {
-    int capacity = 10;
-    int count = 0;
+    int capacity = 10, count = 0;
     char **tokens = malloc((capacity + 1) * sizeof(char *));
-    int i = 0;
-    int len = strlen(input);
-    
+    int i = 0, len = strlen(input);
+
     while (i < len) {
-        // Skip any leading whitespace.
-        while (i < len && isspace(input[i]))
+        // Skip leading whitespace.
+        while (i < len && isspace((unsigned char)input[i]))
             i++;
         if (i >= len)
             break;
-        
+
         char token[1024];
         int j = 0;
-        
-        // If token begins with a quote, parse until closing quote.
+
+        // If token starts with a quote, take everything until the matching quote.
         if (input[i] == '"' || input[i] == '\'') {
             char quote = input[i++];
-            while (i < len && input[i] != quote) {
+            while (i < len && input[i] != quote)
                 token[j++] = input[i++];
-            }
             if (i < len && input[i] == quote)
                 i++; // Skip closing quote.
         } else {
-            // Otherwise, parse until next whitespace.
-            while (i < len && !isspace(input[i])) {
-                token[j++] = input[i++];
+            // Otherwise, build token until next whitespace.
+            while (i < len && !isspace((unsigned char)input[i])) {
+                if (input[i] == '\\' && i + 1 < len) {  // Handle backslash escape
+                    token[j++] = input[i + 1];
+                    i += 2;
+                } else {
+                    token[j++] = input[i++];
+                }
             }
         }
         token[j] = '\0';
-        
         tokens[count++] = strdup(token);
+
         if (count >= capacity) {
             capacity *= 2;
             tokens = realloc(tokens, (capacity + 1) * sizeof(char *));
